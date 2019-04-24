@@ -8,7 +8,7 @@ from sklearn.semi_supervised import label_propagation
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.utils.multiclass import unique_labels
-from dataset_wrapper import label_mapping
+# from dataset_wrapper import label_mapping
 import ipdb
 
 parser = argparse.ArgumentParser()
@@ -56,10 +56,11 @@ Y_test = np.load(os.path.join(opt.data_path, 'test_output.npy'))
 train_input_labelled = X_train[:num_label_sam,:]
 train_out_labelled = Y_train[:num_label_sam,(opt.cat - 1)]
 train_input_unlabelled = X_train[num_label_sam:(num_unlabel_sam + num_label_sam),:]
-train_out_unlabelled = -1 * np.ones((num_unlabel_sam,1), dtype = int)
+train_out_unlabelled = -1 * np.ones((num_unlabel_sam), dtype = int)
+Y_test = Y_test[:,opt.cat - 1]
 # would be used for transductive metrics! 
 orig_label_train = Y_train[:(num_unlabel_sam+num_label_sam),opt.cat-1]
-
+# ipdb.set_trace()
 train_in = np.concatenate((train_input_labelled, train_input_unlabelled), axis = 0)
 train_out = np.concatenate((train_out_labelled, train_out_unlabelled), axis = 0)
  
@@ -100,7 +101,7 @@ if opt.kernel=='rbf':
 else:
     lp_model = label_propagation.LabelSpreading(kernel='knn', n_neighbors=opt.num_neighbors, max_iter=opt.num_iter, n_jobs=10)
 
-lp_model.fit(train_in, train_out)
+lp_model.fit(X_train, train_out)
 
 # if opt.fraction < 1:
 #     predicted_labels = lp_model.transduction_[unlabeled_set]
@@ -210,14 +211,17 @@ def plot_confusion_matrix(y_true, y_pred, classes,
 # make inductive inference on the test data
 # #############################################################################
 predicted_labels = lp_model.predict(X_test)
-plot_confusion_matrix(Y_test, predicted_labels, classes=class_names, normalize=True,
-                      title='Confusion matrix, with normalization')
-plt.savefig('{}/inductive_cf_normalized.png'.format(os.path.join(opt.save_path, exp_name)))
-plt.close()
-plot_confusion_matrix(Y_test, predicted_labels, classes=class_names,
-                      title='Confusion matrix, without normalization')
-plt.savefig('{}/inductive_cf_unnormalized.png'.format(os.path.join(opt.save_path, exp_name)))
-plt.close()
+# plot_confusion_matrix(Y_test, predicted_labels, classes=class_names, normalize=True,
+#                      title='Confusion matrix, with normalization')
+# plt.savefig('{}/inductive_cf_normalized.png'.format(os.path.join(opt.save_path, exp_name)))
+# plt.close()
+# plot_confusion_matrix(Y_test, predicted_labels, classes=class_names,
+#                      title='Confusion matrix, without normalization')
+# plt.savefig('{}/inductive_cf_unnormalized.png'.format(os.path.join(opt.save_path, exp_name)))
+# plt.close()
+print("Test data confison matrix:")
+print(confusion_matrix(Y_test, predicted_labels))
+
 print('-'*50)
 print('Mean accuracy  on the given test data and labels: {}'.format(lp_model.score(X_test, Y_test)))
 print('-'*50)

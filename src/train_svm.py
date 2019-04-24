@@ -12,6 +12,7 @@ parser.add_argument('--cat', type=int, default='1', help='category to train the 
 parser.add_argument('--num_sam', type = int, default = 5000, help='num_samples_to_use')
 parser.add_argument('--pca_com', type = int, default = 1000, help='number of pca compnents to reduce to')
 parser.add_argument('--C', type = int, default = 1, help='C value SVM hyper parameter')
+parser.add_argument('--gamma', type = str, default = 'auto', help ='parameter for svm')
 opt = parser.parse_args()
 
 print('-'*50)
@@ -20,6 +21,7 @@ print("C = " + str(opt.C))
 print("category = " + str(opt.cat))
 print("number of training samples labelled = " + str(opt.num_sam))
 print("number of pca components = " + str(opt.pca_com))
+print("gamma = " + str(opt.gamma))
 print('-'*50)
 
 category = opt.cat
@@ -38,7 +40,7 @@ pca = PCA(n_components=pca_components)
 pca_transformer = pca.fit(input_data)
 data_red_train = pca_transformer.transform(input_data)
 
-clf = SVC(C = C_value, gamma = 'auto')
+clf = SVC(C = C_value, gamma = 'scale')
 clf.fit(data_red_train,output_data)
 
 pred_label_train = clf.predict(data_red_train)
