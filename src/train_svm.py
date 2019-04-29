@@ -6,6 +6,7 @@ import argparse
 import ipdb
 import matplotlib.pyplot as plt
 import numpy as np
+from joblib import dump, load
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--cat', type=int, default='1', help='category to train the svm for')
@@ -13,6 +14,8 @@ parser.add_argument('--num_sam', type = int, default = 5000, help='num_samples_t
 parser.add_argument('--pca_com', type = int, default = 1000, help='number of pca compnents to reduce to')
 parser.add_argument('--C', type = int, default = 1, help='C value SVM hyper parameter')
 parser.add_argument('--gamma', type = str, default = 'auto', help ='parameter for svm')
+parser.add_argument('--save', type = bool, default = True, help = 'a boolean for allowing to save or not')
+parser.add_argument('--save_path', type = str, default = '../models/classifier.joblib', help = 'path for saving the models')
 opt = parser.parse_args()
 
 print('-'*50)
@@ -60,6 +63,11 @@ print(confusion_matrix(output_data, pred_label_train))
 
 print("Test data confison matrix:")
 print(confusion_matrix(test_output, pred_label))
+
+if(opt.save==True):
+    print("saving the model")
+    dump(clf,opt.save_path)
+
 
 
 # TODO: code for AUC under the ROC to be written
