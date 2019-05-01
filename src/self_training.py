@@ -2,7 +2,7 @@ from joblib import dump, load
 from sklearn.svm import SVC
 import random
 from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 import argparse
 import ipdb
 import matplotlib.pyplot as plt
@@ -14,8 +14,8 @@ parser.add_argument('--model_path', type = str, default = '../models/classifier.
 parser.add_argument('--cat', type=int, default='1', help='category to train the svm for')
 parser.add_argument('--num_sam', type = int, default = 10000, help='num_samples_to_use')
 parser.add_argument('--pca_com', type = int, default = 1000, help='number of pca compnents to reduce to')
-parser.add_argument('--C', type = int, default = 1, help='C value SVM hyper parameter')
-parser.add_argument('--gamma', type = str, default = 'auto', help ='parameter for svm')
+parser.add_argument('--C', type = float, default = 1, help='C value SVM hyper parameter')
+parser.add_argument('--gamma', type = float, default = 1e-3, help ='parameter for svm')
 parser.add_argument('--save', type = bool, default = True, help = 'a boolean for allowing to save or not')
 parser.add_argument('--save_path', type = str, default = '../models/classifier_self_trained.joblib', help = 'path for saving the models')
 parser.add_argument('--max_epochs', type = int, default = 5, help = 'number of epochs that you want the svm to train for!')
@@ -41,8 +41,8 @@ print('gamma : ' + str(gamma))
 
 clf = load(model_path)
 
-orig_input_data = np.load("../data/train_input.npy")
-orig_output_data = np.load("../data/train_output.npy")
+orig_input_data = np.load("../data/train_input.npy", mmap_mode = 'r')
+orig_output_data = np.load("../data/train_output.npy", mmap_mode = 'r')
 
 input_data = orig_input_data[10000:10000 + num_sam,:]
 # would be using the ground truth for understanding the transductive statistics! 
@@ -76,6 +76,7 @@ pred_label = clf.predict(test_data_red)
 # print the confusion matrices!
 print("Test data confison matrix:")
 print(confusion_matrix(test_output, pred_label))
+print(classification_report(test_output, pred_label))
 
 if(opt.save==True):
     print("saving the model")

@@ -17,7 +17,7 @@ parser.add_argument('--cat', type=int, default=1, help='category to train for')
 parser.add_argument('--num_label_sam', type=int, default=2000, help='fraction of labeled data')
 parser.add_argument('--num_unlabel_sam', type=int, default=20000, help='fraction of labeled data')
 parser.add_argument('--nc', type=int, default=2500, help='number of components for PCA')
-parser.add_argument('--kernel', type=str, default='rbf', help='which kernel to use: {rbf, knn}')
+parser.add_argument('--kernel', type=str, default='knn', help='which kernel to use: {rbf, knn}')
 parser.add_argument('--num_iter', type=int, default=30, help='number of iterations for label spreading')
 parser.add_argument('--num_neighbors', type=int, default=7, help='number of nearest neighbors for knn kernel')
 parser.add_argument('--gamma', type=float, default=20, help='gamma value for label spreading')
@@ -47,23 +47,24 @@ print('='*50)
 # #############################################################################
 # Data loading and preparation
 # #############################################################################
-X_train = np.load(os.path.join(opt.data_path, 'train_input.npy'))
+# X_train = np.load(os.path.join(opt.data_path, 'train_input.npy'))
 Y_train = np.load(os.path.join(opt.data_path, 'train_output.npy'))
-X_test = np.load(os.path.join(opt.data_path, 'test_input.npy'))
-Y_test = np.load(os.path.join(opt.data_path, 'test_output.npy'))
+# X_test = np.load(os.path.join(opt.data_path, 'test_input.npy'))
+Y_test = np.load(os.path.join(opt.data_path, 'test_out_red_removed.npy'))
 
 
-train_input_labelled = X_train[:num_label_sam,:]
+# train_input_labelled = X_train[:num_label_sam,:]
 train_out_labelled = Y_train[:num_label_sam,(opt.cat - 1)]
-train_input_unlabelled = X_train[num_label_sam:(num_unlabel_sam + num_label_sam),:]
+# train_input_unlabelled = X_train[num_label_sam:(num_unlabel_sam + num_label_sam),:]
 train_out_unlabelled = -1 * np.ones((num_unlabel_sam), dtype = int)
 Y_test = Y_test[:,opt.cat - 1]
 # would be used for transductive metrics! 
 orig_label_train = Y_train[:(num_unlabel_sam+num_label_sam),opt.cat-1]
 # ipdb.set_trace()
-train_in = np.concatenate((train_input_labelled, train_input_unlabelled), axis = 0)
+# train_in = np.concatenate((train_input_labelled, train_input_unlabelled), axis = 0)
 train_out = np.concatenate((train_out_labelled, train_out_unlabelled), axis = 0)
- 
+X_train = np.load('../data/train_in_red.npy')
+X_test = np.load('../data/test_in_red_removed.npy')
 
 
 # class_names = []
@@ -87,19 +88,21 @@ train_out = np.concatenate((train_out_labelled, train_out_unlabelled), axis = 0)
 # Y_ssl = np.copy(Y_train)
 # Y_ssl[unlabeled_set] = -1
 
-print('Applying PCA to select {} components.'.format(opt.nc))
-pca = PCA(n_components=opt.nc)
-pca_transformer = pca.fit(train_in)
-X_train = pca_transformer.transform(train_in)
-X_test = pca_transformer.transform(X_test)
+# print('Applying PCA to select {} components.'.format(opt.nc))
+# pca = PCA(n_components=opt.nc)
+# pca_transformer = pca.fit(train_in)
+# X_train = pca_transformer.transform(train_in)
+# X_test = pca_transformer.transform(X_test)
+
+# ipdb.set_trace()
 
 # #############################################################################
 # Learn with LabelSpreading
 print('Fitting the model now.')
 if opt.kernel=='rbf':
-    lp_model = label_propagation.LabelSpreading(gamma=opt.gamma, max_iter=opt.num_iter, n_jobs=10)
+    lp_model = label_propagation.LabelSpreading(gamma=opt.gamma, max_iter=opt.num_iter, n_jobs=8)
 else:
-    lp_model = label_propagation.LabelSpreading(kernel='knn', n_neighbors=opt.num_neighbors, max_iter=opt.num_iter, n_jobs=10)
+    lp_model = label_propagation.LabelSpreading(kernel='knn', n_neighbors=opt.num_neighbors, max_iter=opt.num_iter, n_jobs=8)
 
 lp_model.fit(X_train, train_out)
 
@@ -221,6 +224,7 @@ predicted_labels = lp_model.predict(X_test)
 # plt.close()
 print("Test data confison matrix:")
 print(confusion_matrix(Y_test, predicted_labels))
+print(classification_report(Y_test, predicted_labels))
 
 print('-'*50)
 print('Mean accuracy  on the given test data and labels: {}'.format(lp_model.score(X_test, Y_test)))

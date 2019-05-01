@@ -1,7 +1,7 @@
 from sklearn.svm import SVC
 import random
 from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 import argparse
 import ipdb
 import matplotlib.pyplot as plt
@@ -12,8 +12,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--cat', type=int, default='1', help='category to train the svm for')
 parser.add_argument('--num_sam', type = int, default = 5000, help='num_samples_to_use')
 parser.add_argument('--pca_com', type = int, default = 1000, help='number of pca compnents to reduce to')
-parser.add_argument('--C', type = int, default = 1, help='C value SVM hyper parameter')
-parser.add_argument('--gamma', type = str, default = 'auto', help ='parameter for svm')
+parser.add_argument('--C', type = float, default = 1, help='C value SVM hyper parameter')
+parser.add_argument('--gamma', type = float, default = 1e-3, help ='parameter for svm')
 parser.add_argument('--save', type = bool, default = True, help = 'a boolean for allowing to save or not')
 parser.add_argument('--save_path', type = str, default = '../models/classifier.joblib', help = 'path for saving the models')
 opt = parser.parse_args()
@@ -31,6 +31,7 @@ category = opt.cat
 num_samples_train = opt.num_sam
 pca_components = opt.pca_com
 C_value = opt.C
+gamma = opt.gamma
 
 orig_input_data = np.load("../data/train_input.npy")
 orig_output_data = np.load("../data/train_output.npy")
@@ -43,7 +44,7 @@ pca = PCA(n_components=pca_components)
 pca_transformer = pca.fit(input_data)
 data_red_train = pca_transformer.transform(input_data)
 
-clf = SVC(C = C_value, gamma = 'scale')
+clf = SVC(C = C_value, gamma = gamma)
 clf.fit(data_red_train,output_data)
 
 pred_label_train = clf.predict(data_red_train)
@@ -63,6 +64,7 @@ print(confusion_matrix(output_data, pred_label_train))
 
 print("Test data confison matrix:")
 print(confusion_matrix(test_output, pred_label))
+print(classification_report(test_output, pred_label))
 
 if(opt.save==True):
     print("saving the model")
